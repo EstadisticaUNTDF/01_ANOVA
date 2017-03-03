@@ -12,6 +12,28 @@ output:
 1.  En un estudio sobre viabilidad, se aíslan tres parejas de *Drosophila melanogaster* en 10 frascos y se hace un recuento del número de huevos al cabo de 8 días. Esta experiencia se repite 4 veces con parejas distintas. Los resultados obtenidos son:
 
 ```{r setup, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE}
+# Install missing packages
+pkg_list <- c("pander", 
+"xlsx", 
+"plyr", 
+"ggplot2", 
+"lsmeans", 
+"reshape2", 
+"magrittr", 
+"nortest",  #normality test
+"car", 
+"pwr", 
+"agricolae", 
+"compute.es", 
+"knitr")
+rep <- structure(c("https://cran.rstudio.com/", "http://www.stats.ox.ac.uk/pub/RWin"
+), .Names = c("CRAN", "CRANextra"), RStudio = TRUE)
+
+pkg_install <- pkg_list[!pkg_list %in% installed.packages()]
+if(length(pkg_install) > 0){
+  install.packages(pkg_install, repos = rep)
+}
+
 # Setup -------------------------------------------------------------------
 library(pander)
 library(xlsx)
@@ -29,15 +51,15 @@ library(knitr)
 
 # opts --------------------------------------------------------------------
 
-source("opts.R")
+source("../src/opts.R")
 
 # Functions ---------------------------------------------------------------
 
-source("functions.R")
+source("../src/functions.R")
 
 # Load data ---------------------------------------------------------------
 
-mosca <- read.xlsx("problemas.xlsx", sheetIndex = 1)
+mosca <- read.xlsx("../data/problemas.xlsx", sheetIndex = 1)
 ```
 
 ```{r mosca}
