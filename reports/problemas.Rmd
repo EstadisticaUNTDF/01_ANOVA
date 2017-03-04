@@ -62,67 +62,8 @@ source("../src/functions.R")
 data_loc <- "../data/problemas.xlsx"
 ```
 
-1.  En un estudio sobre viabilidad, se aíslan tres parejas de *Drosophila melanogaster* en 10 frascos y se hace un recuento del número de huevos al cabo de 8 días. Esta experiencia se repite 4 veces con parejas distintas. Los resultados obtenidos son:
 
-
-```{r mosca}
-mosca <- read.xlsx(data_loc, sheetIndex = 1)
-set.alignment("centre")
-pander::pandoc.table(mosca)
-cat("\n")
-```
-
-a.	¿Es posible reunir las cuatro series en una sola para efectuar un análisis conjunto de la viabilidad? Trabajar con = 0.05
-
-```{r 1.a}
-mosca <- melt(mosca, variable.name = "serie", value.name = "huevos")
-mosca.aov <- aov(huevos ~ serie, data = mosca)
-set.caption("Tabla 1.1 -- Medias, varianzas y desvios estándar por grupo")
-pander(ddply(mosca, .(serie), summarise, 
-             mean = mean(huevos),
-             var = var(huevos),
-             sd = sd(huevos)))
-set.caption("Tabla 1.2 -- ANOVA suma de cuadrados tipo 2.")
-pander(Anova(mosca.aov, type = "II"))
-set.caption("Tabla 1.3 -- Sumario de medias, errores estándar,
-            grados de libertad e intervalos de confianza")
-pander(summary(lsmeans(mosca.aov, "serie")))
-pander(bartlett.test(huevos ~ serie, data = mosca))
-pander(leveneTest(mosca.aov))
-pander(ddply(mosca, "serie",
-             function(x) {
-               ans <- lillie.test(x$huevos)
-               c(D_max = unname(ans[[1]]), p.value = ans[[2]]) 
-               }))
-```
-
-
-```{r plot1, fig.cap="Figura 1.1 -- Gráficos diagnóstico de ANOVA huevos ~ serie"}
-autoplot(mosca.aov, which = c(1:3, 5), nrow = 2)
-```
-
-b.	Hallar la potencia de la prueba realizada cuando se dan ciertas alternativas.
-
-```{r 1.b}
-
-mosca.aov.summary <- summary(mosca.aov)
-bv <- var(summary(lsmeans(mosca.aov, "serie"))[[2]])
-wv <- mosca.aov.summary[[1]][[3]][2]
-
-pander(power.anova.test(4, 10, between.var = bv, within.var = wv))
-
-```
-
-
-c.	Estimar el tamaño de la muestra con que debería trabajar en cada tratamiento para tener una potencia mayor del 95%.
-
-```{r 1.c}
-pander(power.anova.test(4, between.var = bv, within.var = wv, power = 0.95))
-cat("\n")
-```
-
-
-2.- Fueron ensayados dos cebos distintos para estimar si existía una diferencia significativa en función de su consumo por ratones silvestres. Los datos de la tabla se obtuvieron en cinco sitios diferentes por cebo y están expresados como porcentaje de consumo:
+1. Fueron ensayados dos cebos distintos para estimar si existía una diferencia significativa en función de su consumo por ratones silvestres. Los datos de la tabla se obtuvieron en cinco sitios diferentes por cebo y están expresados como porcentaje de consumo:
 
 ```{r cebos}
 cebos <- read.xlsx(data_loc, sheetIndex = 2)
@@ -201,7 +142,7 @@ pander(power.anova.test(2, 5, between.var = bv, within.var = wv))
 cat("\n")
 ```
 
-3.- Durante el estudio del control del fotoperíodo de la reproducción del alga roja Porphira, se llevó a cabo un experimento para examinar el efecto de la interrupción de largos períodos de oscuridad, mediante un período de iluminación de 30 minutos con luz de diferentes longitudes de onda, y se contaron los esporangios en un volumen fijo de material. Se obtuvieron  4 réplicas para cada una de las cinco longitudes de onda.
+2. Durante el estudio del control del fotoperíodo de la reproducción del alga roja Porphira, se llevó a cabo un experimento para examinar el efecto de la interrupción de largos períodos de oscuridad, mediante un período de iluminación de 30 minutos con luz de diferentes longitudes de onda, y se contaron los esporangios en un volumen fijo de material. Se obtuvieron  4 réplicas para cada una de las cinco longitudes de onda.
 
 ```{r alga, echo=FALSE, results='asis'}
 alga <- read.xlsx(data_loc, sheetIndex = 3, encoding = "UTF-8")
@@ -253,7 +194,7 @@ cat("\n")
 ```
 
 
-4.- La faciolasis es una enfermedad parasitaria producida por la *Fasciola hepatica* (trematode hepático). Los trematodes adultos viven en el conducto biliar del huésped, donde segregan cantidades significativas de ciertos aminoácidos, en especial prolina; el huésped presenta, como característica, anemia (reducción en los glóbulos rojos de la sangre). Se tomaron 40 ratas Wistar, sanas de aproximadamente igual peso y edad, se dividieron al azar en 4 grupos de 10 ratas cada uno. Se adaptó un aparato para infundir material directamente al conducto biliar de las ratas mediante una cánula. Las ratas del grupo I recibieron 20 minimoles de prolina disuelta en suero fisiológico, las del grupo II recibieron un cóctel consistente siete aminoácidos (excluyendo prolina) segregados por el trematode, también disuelto en suero fisiológico; el grupo III recibió lo mismo que el II más el agregado de 20 milimoles de prolina (simulando a lo segregado por el trematode) y el grupo IV sólo se trató con suero fisiológico. En todos los casos se tomó como variable el número de glóbulos rojos del huésped, expresados en millones por mm3 de sangre. Los resultados se presentan en la siguiente tabla:
+3. La faciolasis es una enfermedad parasitaria producida por la *Fasciola hepatica* (trematode hepático). Los trematodes adultos viven en el conducto biliar del huésped, donde segregan cantidades significativas de ciertos aminoácidos, en especial prolina; el huésped presenta, como característica, anemia (reducción en los glóbulos rojos de la sangre). Se tomaron 40 ratas Wistar, sanas de aproximadamente igual peso y edad, se dividieron al azar en 4 grupos de 10 ratas cada uno. Se adaptó un aparato para infundir material directamente al conducto biliar de las ratas mediante una cánula. Las ratas del grupo I recibieron 20 minimoles de prolina disuelta en suero fisiológico, las del grupo II recibieron un cóctel consistente siete aminoácidos (excluyendo prolina) segregados por el trematode, también disuelto en suero fisiológico; el grupo III recibió lo mismo que el II más el agregado de 20 milimoles de prolina (simulando a lo segregado por el trematode) y el grupo IV sólo se trató con suero fisiológico. En todos los casos se tomó como variable el número de glóbulos rojos del huésped, expresados en millones por mm3 de sangre. Los resultados se presentan en la siguiente tabla:
 
 ```{r parasito, echo=FALSE, message=FALSE, results='asis'}
 parasito <- read.xlsx(data_loc, sheetIndex = 4, encoding = "UTF-8")
@@ -309,7 +250,7 @@ pander(cld(parasito.lsm))
 
 d)	Realice un breve comentario sobre el diseño del experimento.
 
-5.- Se realiza una experiencia a fin de comparar tres métodos diferentes para determinar el contenido de oxígeno disuelto en el agua de lagos. Se extrae una muestra aleatoria de 18 muestras de agua de un lago, las cuales se dividen al azar en tres grupos de igual tamaño y cada uno de los grupos es asignado al azar a uno de los métodos que se quiere comparar. Se obtienen los siguientes resultados, expresados en mg/litro:
+4. Se realiza una experiencia a fin de comparar tres métodos diferentes para determinar el contenido de oxígeno disuelto en el agua de lagos. Se extrae una muestra aleatoria de 18 muestras de agua de un lago, las cuales se dividen al azar en tres grupos de igual tamaño y cada uno de los grupos es asignado al azar a uno de los métodos que se quiere comparar. Se obtienen los siguientes resultados, expresados en mg/litro:
 
 ```{r o2, echo=FALSE, message=FALSE, results='asis'}
 o2 <- read.xlsx(data_loc, sheetIndex = 5, encoding = "UTF-8")
@@ -424,7 +365,7 @@ pander(o2.aov)
 ```
 
 ```{r 5.plotl, fig.cap="Figura 5.2 -- Gráficos diagnóstico de ANOVA: O2disuelto ~ método "}
-autoplot(o2.aov, which = c(1:3, 5), nrow = 2))
+autoplot(o2.aov, which = c(1:3, 5), nrow = 2)
 ```
 c)	Realizar comparaciones entre métodos, utilizando todos los métodos de contraste conocidos e indicar cuáles serían los adecuados a este problema particular.
 
@@ -468,7 +409,7 @@ pander(power.anova.test(g, power = 0.95, between.var = bv, within.var = wv))
 cat("\n")
 ```
 
-6.- Se lleva a cabo una experiencia para poner a prueba el efecto de 6 fertilizantes sobre el crecimiento de la soja, obteniéndose la siguiente tabla de ANOVA:
+5. Se lleva a cabo una experiencia para poner a prueba el efecto de 6 fertilizantes sobre el crecimiento de la soja, obteniéndose la siguiente tabla de ANOVA:
 
 ```{r 6}
 soja <- read.xlsx(data_loc, sheetIndex = 6, encoding = "UTF-8")
@@ -489,5 +430,65 @@ wv <- as.numeric(as.character(soja$SC[2])) / soja$GL[2]
 
 
 pander(power.anova.test(g, n, between.var = bv, within.var = wv))
+cat("\n")
+```
+
+
+6.  En un estudio sobre viabilidad, se aíslan tres parejas de *Drosophila melanogaster* en 10 frascos y se hace un recuento del número de huevos al cabo de 8 días. Esta experiencia se repite 4 veces con parejas distintas. Los resultados obtenidos son:
+
+
+```{r mosca}
+mosca <- read.xlsx(data_loc, sheetIndex = 1)
+set.alignment("centre")
+pander::pandoc.table(mosca)
+cat("\n")
+```
+
+a.	¿Es posible reunir las cuatro series en una sola para efectuar un análisis conjunto de la viabilidad? Trabajar con = 0.05
+
+```{r 1.a}
+mosca <- melt(mosca, variable.name = "serie", value.name = "huevos")
+mosca.aov <- aov(huevos ~ serie, data = mosca)
+set.caption("Tabla 1.1 -- Medias, varianzas y desvios estándar por grupo")
+pander(ddply(mosca, .(serie), summarise, 
+             mean = mean(huevos),
+             var = var(huevos),
+             sd = sd(huevos)))
+set.caption("Tabla 1.2 -- ANOVA suma de cuadrados tipo 2.")
+pander(Anova(mosca.aov, type = "II"))
+set.caption("Tabla 1.3 -- Sumario de medias, errores estándar,
+            grados de libertad e intervalos de confianza")
+pander(summary(lsmeans(mosca.aov, "serie")))
+pander(bartlett.test(huevos ~ serie, data = mosca))
+pander(leveneTest(mosca.aov))
+pander(ddply(mosca, "serie",
+             function(x) {
+               ans <- lillie.test(x$huevos)
+               c(D_max = unname(ans[[1]]), p.value = ans[[2]]) 
+               }))
+```
+
+
+```{r plot1, fig.cap="Figura 1.1 -- Gráficos diagnóstico de ANOVA huevos ~ serie"}
+autoplot(mosca.aov, which = c(1:3, 5), nrow = 2)
+```
+
+b.	Hallar la potencia de la prueba realizada cuando se dan ciertas alternativas.
+
+```{r 1.b}
+
+mosca.aov.summary <- summary(mosca.aov)
+bv <- var(summary(lsmeans(mosca.aov, "serie"))[[2]])
+wv <- mosca.aov.summary[[1]][[3]][2]
+
+pander(power.anova.test(4, 10, between.var = bv, within.var = wv))
+
+```
+
+
+c.	Estimar el tamaño de la muestra con que debería trabajar en cada tratamiento para tener una potencia mayor del 95%.
+
+```{r 1.c}
+pander(power.anova.test(4, between.var = bv, within.var = wv, power = 0.95))
 cat("\n")
 ```
