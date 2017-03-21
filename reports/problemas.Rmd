@@ -3,11 +3,11 @@ title: "Problemas ANOVA I"
 author: "Luciano Selzer"
 date: "4 de marzo de 2017"
 output:
-  pdf_document: default
   word_document:
     fig_caption: yes
     fig_height: 4
     fig_width: 6
+  pdf_document: default
 ---
 
 ```{r setup, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE}
@@ -67,39 +67,34 @@ data_loc <- "../data/problemas.xlsx"
 
 ```{r cebos}
 cebos <- read.xlsx(data_loc, sheetIndex = 2)
-pander(cebos)
+cebos
 ```
 
-Analizar la significación de estas observaciones
+Analizar la significación de estas observaciones.
 
 ```{r 2.1}
 cebos <- melt(cebos, variable.name = "cebo", value.name = "consumo")
-pander(ddply(cebos, "cebo", summarise, media = mean(consumo),
-             var = var(consumo), sd = sd(consumo)),
-       emphasize.strong.cols = 1, 
-       caption = "Tabla 2.1 -- Medias, varianzas y desvios estándar para ambos
-       tipos de cebos")
+ddply(cebos, "cebo", summarise, media = mean(consumo),
+             var = var(consumo), sd = sd(consumo))
 ```
 
 **Pruebas de Supuestos**
 
 
 ```{r 2.2}
-pander(bartlett.test(consumo ~ cebo, data = cebos))
-pander(leveneTest(consumo ~ cebo, data = cebos))
-cat("\n")
-pander(ddply(cebos, "cebo",
+bartlett.test(consumo ~ cebo, data = cebos)
+leveneTest(consumo ~ cebo, data = cebos)
+ddply(cebos, "cebo",
              function(x) {
                ans <- lillie.test(x$consumo)
                c(D_max = unname(ans[[1]]), p.value = ans[[2]]) 
-               }))
-cat("\n")
+               })
 ```
 
 ```{r 2.3}
 cebo.aov <- aov(consumo ~ cebo, data = cebos)
-pander(summary(cebo.aov))
-cat("\n")
+summary(cebo.aov)
+
 ```
 
 
@@ -107,22 +102,22 @@ cat("\n")
 autoplot(cebo.aov, which = c(1:3, 5), nrow = 2)
 ```
 
-Aplicando la transformación del arcoseno (Zar 1996)
+¿Qué transformación es conveniente utlizar teniendo en cuenta el tipo de dato?
 
 ```{r 2.5}
 cebo.aov <- aov(asin(sqrt(consumo/100)) ~ cebo, data = cebos)
-pander(summary(cebo.aov))
-cat("\n")
-pander(bartlett.test(asin(sqrt(consumo/100)) ~ cebo, data = cebos))
-pander(leveneTest(asin(sqrt(consumo/100)) ~ cebo, data = cebos))
-cat("\n")
+summary(cebo.aov)
+
+bartlett.test(asin(sqrt(consumo/100)) ~ cebo, data = cebos)
+leveneTest(asin(sqrt(consumo/100)) ~ cebo, data = cebos)
+
 pander(ddply(cebos, "cebo",
              function(x) {
                ans <- lillie.test(asin(sqrt(x$consumo/100)))
                c(D_max = unname(ans[[1]]), p.value = ans[[2]]) 
                }))
 
-cat("\n")
+
 ```
 
 
@@ -135,19 +130,22 @@ La potencia de la prueba:
 
 ```{r 2.7}
 cebo.aov.summary <- summary(cebo.aov)
+# Varianza entre tratamientos
 bv <- var(summary(lsmeans(cebo.aov, "cebo"))[[2]])
-wv <- cebo.aov.summary[[1]][[3]][2]
+# Varianza entre tratamientos dentro
+# ¿Cual es el estimador?
+wv <- 
 
-pander(power.anova.test(2, 5, between.var = bv, within.var = wv))
-cat("\n")
+power.anova.test(groups = 2, n = 5, between.var = bv, within.var = wv)
+
 ```
 
 2. Durante el estudio del control del fotoperíodo de la reproducción del alga roja Porphira, se llevó a cabo un experimento para examinar el efecto de la interrupción de largos períodos de oscuridad, mediante un período de iluminación de 30 minutos con luz de diferentes longitudes de onda, y se contaron los esporangios en un volumen fijo de material. Se obtuvieron  4 réplicas para cada una de las cinco longitudes de onda.
 
 ```{r alga, echo=FALSE, results='asis'}
 alga <- read.xlsx(data_loc, sheetIndex = 3, encoding = "UTF-8")
-pander(alga, emphasize.rownames = TRUE)
-cat("\n")
+alga
+
 ```
 
 Teóricamente solamente la luz roja tiene efecto sobre el número de esporangios.
@@ -155,22 +153,23 @@ a)	Realizar un análisis para decidir si hay diferencia entre los efectos de las
 
  
 ```{r 3.a}
+# Poner en formato largo
 alga <- melt(alga, value.name = "esporangios",
              id.vars = "Color")[,-2]
-set.caption("Tabla 3.1 -- Medias, varianzas y desvios estándar por grupo")
-pander(ddply(alga, .(Color), summarise, 
+
+ddply(alga, .(Color), summarise, 
              mean = mean(esporangios),
              var = var(esporangios),
-             sd = sd(esporangios)))
-pander(bartlett.test(esporangios ~ Color, data = alga))
-pander(leveneTest(esporangios ~ Color, data = alga))
-cat("\n")
-# pander(ddply(alga, "Color", function(x) lillie.test(x$esporangios)))
-cat("\n")
+             sd = sd(esporangios))
+bartlett.test(esporangios ~ Color, data = alga)
+leveneTest(esporangios ~ Color, data = alga)
+
+# ddply(alga, "Color", function(x) lillie.test(x$esporangios))
+
 
 alga.aov <- aov(esporangios ~ Color, data = alga)
-pander(alga.aov)
-cat("\n")
+alga.aov
+
 ```
 
 
@@ -182,15 +181,15 @@ b)	Poner a prueba el supuesto teórico.
 
 ```{r 3.b}
 alga.lsm <- lsmeans(alga.aov, "Color")
-pander(summary(contrast(alga.lsm, "trt.vs.ctrl", ref = 4)))
-cat("\n")
+summary(contrast(alga.lsm, "trt.vs.ctrl", ref = 4))
+
 ```
 
 c)	¿Puede inferirse algún otro resultado?
 
 ```{r 3.c}
-pander(cld(alga.lsm))
-cat("\n")
+cld(alga.lsm)
+
 ```
 
 
@@ -198,7 +197,7 @@ cat("\n")
 
 ```{r parasito, echo=FALSE, message=FALSE, results='asis'}
 parasito <- read.xlsx(data_loc, sheetIndex = 4, encoding = "UTF-8")
-pander(parasito)
+parasito
 ```
 
 a)	Plantear y comprobar todos los supuestos para la validez de las pruebas estadísticas utilizadas.
@@ -210,20 +209,20 @@ parasito <- parasito[-1, ] %>%
   melt(variable.name = "grupo", value.name = "n_gr" )
 
 set.caption("Tabla 4.1 -- Medias, varianzas y desvios estándar por grupo")
-pander(ddply(parasito, .(grupo), summarise, 
+ddply(parasito, .(grupo, summarise, 
              mean = mean(n_gr),
              var = var(n_gr),
              sd = sd(n_gr)))
 
-pander(bartlett.test(n_gr ~ grupo, data = parasito))
-pander(leveneTest(n_gr ~ grupo, data = parasito))
-cat("\n")
+bartlett.test(n_gr ~ grupo, data = parasito)
+leveneTest(n_gr ~ grupo, data = parasito)
+
 pander(ddply(parasito, "grupo",
              function(x) {
                ans <- lillie.test(x$n_gr)
                c(D_max = unname(ans[[1]]), p.value = ans[[2]]) 
                }))
-cat("\n")
+
 
 ```
 
@@ -237,15 +236,15 @@ b)	¿Está asociada la reducción del número de glóbulos rojos de la sangre de
 
 
 ```{r 4.2, echo=FALSE, results='asis', warning=FALSE}
-pander(parasito.aov)
+parasito.aov
 ```
 
 c)	¿Está específicamente asociado a la segregación de prolina?
 
 ```{r 4.3, echo=FALSE, results='asis', warning=FALSE}
 parasito.lsm <- lsmeans(parasito.aov, "grupo")
-pander(summary(contrast(parasito.lsm, "trt.vs.ctrl", ref = c(1,3))))
-pander(cld(parasito.lsm))
+summary(contrast(parasito.lsm, "trt.vs.ctrl", ref = c(1,3)))
+cld(parasito.lsm)
 ```
 
 d)	Realice un breve comentario sobre el diseño del experimento.
@@ -254,7 +253,7 @@ d)	Realice un breve comentario sobre el diseño del experimento.
 
 ```{r o2, echo=FALSE, message=FALSE, results='asis'}
 o2 <- read.xlsx(data_loc, sheetIndex = 5, encoding = "UTF-8")
-pander(o2)
+o2
 ```
 
 
@@ -264,20 +263,20 @@ a)	Comprobar las suposiciones del ANOVA
 o2 <- melt(o2, variable.name = "método", value.name = "O2disuelto")
 
 set.caption("Tabla 5.1 -- Medias, varianzas y desvios estándar por grupo")
-pander(ddply(o2, .(método), summarise, 
+ddply(o2, .(método, summarise, 
              mean = mean(O2disuelto),
              var = var(O2disuelto),
              sd = sd(O2disuelto)))
 
-pander(bartlett.test(O2disuelto ~ método, data = o2))
-pander(leveneTest(O2disuelto ~ método, data = o2))
-cat("\n")
+bartlett.test(O2disuelto ~ método, data = o2)
+leveneTest(O2disuelto ~ método, data = o2)
+
 pander(ddply(o2, "método",
              function(x) {
                ans <- lillie.test(x$O2disuelto)
                c(D_max = unname(ans[[1]]), p.value = ans[[2]]) 
                }))
-cat("\n")
+
 
 ```
 
@@ -286,7 +285,7 @@ b)	Poner a prueba la hipótesis “No hay efecto del método en la determinació
 ```{r 5.b}
 
 o2.aov <- aov(O2disuelto ~ método, data = o2)
-pander(o2.aov)
+o2.aov
 ```
 
 ```{r 5.plot, fig.cap="Figura 5.1 -- Gráficos diagnóstico de ANOVA: O2disuelto ~ método "}
@@ -297,13 +296,13 @@ c)	Realizar comparaciones entre métodos, utilizando todos los métodos de contr
 ```{r 5.c}
 set.caption("Medias, error estándar, grados de libertada e
             intervalos de confianza (95%)")
-pander(summary(lsmeans(o2.aov, ~ método)))
+summary(lsmeans(o2.aov, ~ método))
 set.caption("Contraste Tukey")
-pander(summary(lsmeans(o2.aov,  pairwise ~ método))[[2]])
+summary(lsmeans(o2.aov,  pairwise ~ método))[[2]]
 set.caption("Contraste Bonferroni")
-pander(summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "bonf"))[[2]])
+summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "bonf"))[[2]]
 set.caption("Contraste LSD")
-pander(summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "none"))[[2]])
+summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "none"))[[2]]
 
 
 ```
@@ -317,8 +316,8 @@ bv <- var(summary(lsmeans(o2.aov, "método"))[[2]])
 wv <- o2.aov.summary[[1]][[3]][2]
 g <- nlevels(o2$método)
 n <- nrow(o2)/g
-pander(power.anova.test(g, n, between.var = bv, within.var = wv))
-cat("\n")
+power.anova.test(g, n, between.var = bv, within.var = wv)
+
 ```
 
 e)	Estimar el tamaño de la muestra (¿de qué?) con la que debería trabajar para tener una potencia del 95%, con una probabilidad de cometer error de Tipo I del 5%.
@@ -330,8 +329,8 @@ bv <- var(summary(lsmeans(o2.aov, "método"))[[2]])
 wv <- o2.aov.summary[[1]][[3]][2]
 g <- nlevels(o2$método)
 
-pander(power.anova.test(g, power = 0.95, between.var = bv, within.var = wv))
-cat("\n")
+power.anova.test(g, power = 0.95, between.var = bv, within.var = wv)
+
 ```
 
 
@@ -340,19 +339,19 @@ cat("\n")
 ```{r 5.al}
 o2 <- transform(o2, logO2 = log1p(O2disuelto))
 set.caption("Tabla 5.1 -- Medias, varianzas y desvios estándar por grupo")
-pander(ddply(o2, .(método), summarise, 
+ddply(o2, .(método, summarise, 
              mean = mean(logO2),
              var = var(logO2),
              sd = sd(logO2)))
-pander(bartlett.test(logO2 ~ método, data = o2))
-pander(leveneTest(logO2 ~ método, data = o2))
-cat("\n")
+bartlett.test(logO2 ~ método, data = o2)
+leveneTest(logO2 ~ método, data = o2)
+
 pander(ddply(o2, "método",
              function(x) {
                ans <- lillie.test(x$logO2)
                c(D_max = unname(ans[[1]]), p.value = ans[[2]]) 
                }))
-cat("\n")
+
 
 ```
 
@@ -361,7 +360,7 @@ b)	Poner a prueba la hipótesis “No hay efecto del método en la determinació
 ```{r 5.bl}
 
 o2.aov <- aov(logO2 ~ método, data = o2)
-pander(o2.aov)
+o2.aov
 ```
 
 ```{r 5.plotl, fig.cap="Figura 5.2 -- Gráficos diagnóstico de ANOVA: O2disuelto ~ método "}
@@ -372,13 +371,13 @@ c)	Realizar comparaciones entre métodos, utilizando todos los métodos de contr
 ```{r 5.cl}
 set.caption("Medias, error estándar, grados de libertada e
             intervalos de confianza (95%)")
-pander(summary(lsmeans(o2.aov, ~ método)))
+summary(lsmeans(o2.aov, ~ método))
 set.caption("Contraste Tukey")
-pander(summary(lsmeans(o2.aov,  pairwise ~ método))[[2]])
+summary(lsmeans(o2.aov,  pairwise ~ método))[[2]]
 set.caption("Contraste Bonferroni")
-pander(summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "bonf"))[[2]])
+summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "bonf"))[[2]]
 set.caption("Contraste LSD")
-pander(summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "none"))[[2]])
+summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "none"))[[2]]
 
 
 ```
@@ -392,8 +391,8 @@ bv <- var(summary(lsmeans(o2.aov, "método"))[[2]])
 wv <- o2.aov.summary[[1]][[3]][2]
 g <- nlevels(o2$método)
 n <- nrow(o2)/g
-pander(power.anova.test(g, n, between.var = bv, within.var = wv))
-cat("\n")
+power.anova.test(g, n, between.var = bv, within.var = wv)
+
 ```
 
 e)	Estimar el tamaño de la muestra (¿de qué?) con la que debería trabajar para tener una potencia del 95%, con una probabilidad de cometer error de Tipo I del 5%.
@@ -405,15 +404,15 @@ bv <- var(summary(lsmeans(o2.aov, "método"))[[2]])
 wv <- o2.aov.summary[[1]][[3]][2]
 g <- nlevels(o2$método)
 
-pander(power.anova.test(g, power = 0.95, between.var = bv, within.var = wv))
-cat("\n")
+power.anova.test(g, power = 0.95, between.var = bv, within.var = wv)
+
 ```
 
 5. Se lleva a cabo una experiencia para poner a prueba el efecto de 6 fertilizantes sobre el crecimiento de la soja, obteniéndose la siguiente tabla de ANOVA:
 
 ```{r 6}
 soja <- read.xlsx(data_loc, sheetIndex = 6, encoding = "UTF-8")
-pander(soja)
+soja
 ```
 
 
@@ -429,8 +428,8 @@ wv <- as.numeric(as.character(soja$SC[2])) / soja$GL[2]
 
 
 
-pander(power.anova.test(g, n, between.var = bv, within.var = wv))
-cat("\n")
+power.anova.test(g, n, between.var = bv, within.var = wv)
+
 ```
 
 
@@ -441,7 +440,7 @@ cat("\n")
 mosca <- read.xlsx(data_loc, sheetIndex = 1)
 set.alignment("centre")
 pander::pandoc.table(mosca)
-cat("\n")
+
 ```
 
 a.	¿Es posible reunir las cuatro series en una sola para efectuar un análisis conjunto de la viabilidad? Trabajar con = 0.05
@@ -450,17 +449,17 @@ a.	¿Es posible reunir las cuatro series en una sola para efectuar un análisis 
 mosca <- melt(mosca, variable.name = "serie", value.name = "huevos")
 mosca.aov <- aov(huevos ~ serie, data = mosca)
 set.caption("Tabla 1.1 -- Medias, varianzas y desvios estándar por grupo")
-pander(ddply(mosca, .(serie), summarise, 
+ddply(mosca, .(serie, summarise, 
              mean = mean(huevos),
              var = var(huevos),
              sd = sd(huevos)))
 set.caption("Tabla 1.2 -- ANOVA suma de cuadrados tipo 2.")
-pander(Anova(mosca.aov, type = "II"))
+Anova(mosca.aov, type = "II")
 set.caption("Tabla 1.3 -- Sumario de medias, errores estándar,
             grados de libertad e intervalos de confianza")
-pander(summary(lsmeans(mosca.aov, "serie")))
-pander(bartlett.test(huevos ~ serie, data = mosca))
-pander(leveneTest(mosca.aov))
+summary(lsmeans(mosca.aov, "serie"))
+bartlett.test(huevos ~ serie, data = mosca)
+leveneTest(mosca.aov)
 pander(ddply(mosca, "serie",
              function(x) {
                ans <- lillie.test(x$huevos)
@@ -481,7 +480,7 @@ mosca.aov.summary <- summary(mosca.aov)
 bv <- var(summary(lsmeans(mosca.aov, "serie"))[[2]])
 wv <- mosca.aov.summary[[1]][[3]][2]
 
-pander(power.anova.test(4, 10, between.var = bv, within.var = wv))
+power.anova.test(4, 10, between.var = bv, within.var = wv)
 
 ```
 
@@ -489,6 +488,6 @@ pander(power.anova.test(4, 10, between.var = bv, within.var = wv))
 c.	Estimar el tamaño de la muestra con que debería trabajar en cada tratamiento para tener una potencia mayor del 95%.
 
 ```{r 1.c}
-pander(power.anova.test(4, between.var = bv, within.var = wv, power = 0.95))
-cat("\n")
+power.anova.test(4, between.var = bv, within.var = wv, power = 0.95)
+
 ```
