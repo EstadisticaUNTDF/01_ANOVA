@@ -156,17 +156,19 @@ a)	Realizar un análisis para decidir si hay diferencia entre los efectos de las
 # Poner en formato largo
 alga <- melt(alga, value.name = "esporangios",
              id.vars = "Color")[,-2]
-
+# Medias, varianzas y desvios por grupos
 ddply(alga, .(Color), summarise, 
              mean = mean(esporangios),
              var = var(esporangios),
              sd = sd(esporangios))
+
+
 bartlett.test(esporangios ~ Color, data = alga)
 leveneTest(esporangios ~ Color, data = alga)
 
 # ddply(alga, "Color", function(x) lillie.test(x$esporangios))
 
-
+# Anova
 alga.aov <- aov(esporangios ~ Color, data = alga)
 alga.aov
 
@@ -203,16 +205,17 @@ parasito
 a)	Plantear y comprobar todos los supuestos para la validez de las pruebas estadísticas utilizadas.
 
 ```{r 4.1}
+# Eliminar la primera fila, convertir en númerico y pasar a formato largo
 parasito <- parasito[-1, ] %>% 
   apply(2, as.numeric) %>% 
   as.data.frame() %>% 
   melt(variable.name = "grupo", value.name = "n_gr" )
 
-set.caption("Tabla 4.1 -- Medias, varianzas y desvios estándar por grupo")
-ddply(parasito, .(grupo, summarise, 
+# Medias, varianzas y desvios por grupos
+ddply(parasito, .(grupo), summarise, 
              mean = mean(n_gr),
              var = var(n_gr),
-             sd = sd(n_gr)))
+             sd = sd(n_gr))
 
 bartlett.test(n_gr ~ grupo, data = parasito)
 leveneTest(n_gr ~ grupo, data = parasito)
@@ -259,14 +262,14 @@ o2
 
 a)	Comprobar las suposiciones del ANOVA
 
-```{r 5.a, echo=FALSE, results='asis', warning=FALSE}
+```{r 5.a, echo=FALSE, warning=FALSE}
 o2 <- melt(o2, variable.name = "método", value.name = "O2disuelto")
 
-set.caption("Tabla 5.1 -- Medias, varianzas y desvios estándar por grupo")
-ddply(o2, .(método, summarise, 
+# Medias, varianzas y desvios por grupos
+ddply(o2, .(método), summarise, 
              mean = mean(O2disuelto),
              var = var(O2disuelto),
-             sd = sd(O2disuelto)))
+             sd = sd(O2disuelto))
 
 bartlett.test(O2disuelto ~ método, data = o2)
 leveneTest(O2disuelto ~ método, data = o2)
@@ -294,14 +297,13 @@ autoplot(o2.aov, which = c(1:3, 5), nrow = 2)
 c)	Realizar comparaciones entre métodos, utilizando todos los métodos de contraste conocidos e indicar cuáles serían los adecuados a este problema particular.
 
 ```{r 5.c}
-set.caption("Medias, error estándar, grados de libertada e
-            intervalos de confianza (95%)")
+#Medias, error estándar, grados de libertadad e intervalos de confianza (95%)
 summary(lsmeans(o2.aov, ~ método))
-set.caption("Contraste Tukey")
+# Contraste Tukey"
 summary(lsmeans(o2.aov,  pairwise ~ método))[[2]]
-set.caption("Contraste Bonferroni")
+#Contraste Bonferroni"
 summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "bonf"))[[2]]
-set.caption("Contraste LSD")
+#Contraste LSD
 summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "none"))[[2]]
 
 
@@ -313,7 +315,8 @@ d)	Hallar la potencia de la prueba para alguna hipótesis alternativa.
 ```{r 5.d}
 o2.aov.summary <- summary(o2.aov)
 bv <- var(summary(lsmeans(o2.aov, "método"))[[2]])
-wv <- o2.aov.summary[[1]][[3]][2]
+# ¿Cuál es el estimador de la varianza dentro de grupos?
+wv <- 
 g <- nlevels(o2$método)
 n <- nrow(o2)/g
 power.anova.test(g, n, between.var = bv, within.var = wv)
@@ -336,21 +339,23 @@ power.anova.test(g, power = 0.95, between.var = bv, within.var = wv)
 
 ### Resultados transformando con log(x+1):
 
+¿Por qué hay que re hacer los análisis con los datos transformados
+
 ```{r 5.al}
 o2 <- transform(o2, logO2 = log1p(O2disuelto))
-set.caption("Tabla 5.1 -- Medias, varianzas y desvios estándar por grupo")
-ddply(o2, .(método, summarise, 
+# Medias, varianzas y desvios estándar por grupo
+ddply(o2, .(método), summarise, 
              mean = mean(logO2),
              var = var(logO2),
-             sd = sd(logO2)))
+             sd = sd(logO2))
 bartlett.test(logO2 ~ método, data = o2)
 leveneTest(logO2 ~ método, data = o2)
 
-pander(ddply(o2, "método",
+ddply(o2, "método",
              function(x) {
                ans <- lillie.test(x$logO2)
                c(D_max = unname(ans[[1]]), p.value = ans[[2]]) 
-               }))
+               })
 
 
 ```
@@ -369,17 +374,14 @@ autoplot(o2.aov, which = c(1:3, 5), nrow = 2)
 c)	Realizar comparaciones entre métodos, utilizando todos los métodos de contraste conocidos e indicar cuáles serían los adecuados a este problema particular.
 
 ```{r 5.cl}
-set.caption("Medias, error estándar, grados de libertada e
-            intervalos de confianza (95%)")
+# Medias, error estándar, grados de libertad e intervalos de confianza (95%)
 summary(lsmeans(o2.aov, ~ método))
-set.caption("Contraste Tukey")
+# Contraste Tukey
 summary(lsmeans(o2.aov,  pairwise ~ método))[[2]]
-set.caption("Contraste Bonferroni")
+# Contraste Bonferroni"
 summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "bonf"))[[2]]
-set.caption("Contraste LSD")
+# Contraste LSD
 summary(lsmeans(o2.aov,  pairwise ~ método, adjust = "none"))[[2]]
-
-
 ```
 
 
@@ -422,8 +424,7 @@ Calcular la potencia. Enuncie sus conclusiones.
 
 g <- soja$GL[1] + 1
 n <- (soja$GL[2] + g)/g
-bv <- (as.numeric(as.character(soja$SC[1])) +
-         as.numeric(as.character(soja$SC[2]))) / (n*g-1)/n
+bv <- as.numeric(as.character(soja$SC[1]))/soja$GL[1]/n
 wv <- as.numeric(as.character(soja$SC[2])) / soja$GL[2]
 
 
@@ -438,33 +439,36 @@ power.anova.test(g, n, between.var = bv, within.var = wv)
 
 ```{r mosca}
 mosca <- read.xlsx(data_loc, sheetIndex = 1)
-set.alignment("centre")
-pander::pandoc.table(mosca)
-
+mosca
 ```
 
 a.	¿Es posible reunir las cuatro series en una sola para efectuar un análisis conjunto de la viabilidad? Trabajar con = 0.05
 
 ```{r 1.a}
+# Poner los datos en formato largo
 mosca <- melt(mosca, variable.name = "serie", value.name = "huevos")
+
+# Realizar ANOVA
 mosca.aov <- aov(huevos ~ serie, data = mosca)
-set.caption("Tabla 1.1 -- Medias, varianzas y desvios estándar por grupo")
-ddply(mosca, .(serie, summarise, 
+
+# Medias, varianzas y desvios por grupo
+ddply(mosca, .(serie), summarise, 
              mean = mean(huevos),
              var = var(huevos),
              sd = sd(huevos)))
-set.caption("Tabla 1.2 -- ANOVA suma de cuadrados tipo 2.")
+# Tabla 1.2 -- ANOVA suma de cuadrados tipo 2.
 Anova(mosca.aov, type = "II")
-set.caption("Tabla 1.3 -- Sumario de medias, errores estándar,
-            grados de libertad e intervalos de confianza")
+#Tabla 1.3 -- Sumario de medias, errores estándar, grados de libertad e intervalos de confianza
 summary(lsmeans(mosca.aov, "serie"))
+
+#Supuestos
 bartlett.test(huevos ~ serie, data = mosca)
 leveneTest(mosca.aov)
-pander(ddply(mosca, "serie",
+ddply(mosca, "serie",
              function(x) {
                ans <- lillie.test(x$huevos)
                c(D_max = unname(ans[[1]]), p.value = ans[[2]]) 
-               }))
+               })
 ```
 
 
@@ -477,8 +481,10 @@ b.	Hallar la potencia de la prueba realizada cuando se dan ciertas alternativas.
 ```{r 1.b}
 
 mosca.aov.summary <- summary(mosca.aov)
+
 bv <- var(summary(lsmeans(mosca.aov, "serie"))[[2]])
-wv <- mosca.aov.summary[[1]][[3]][2]
+#¿Cual es el estimador de la varianza?
+wv <- 
 
 power.anova.test(4, 10, between.var = bv, within.var = wv)
 
