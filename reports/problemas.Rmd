@@ -3,11 +3,11 @@ title: "Problemas ANOVA I"
 author: "Luciano Selzer"
 date: "4 de marzo de 2017"
 output:
+  pdf_document: default
   word_document:
     fig_caption: yes
     fig_height: 4
     fig_width: 6
-  pdf_document: default
 ---
 
 ```{r setup, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE}
